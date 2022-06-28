@@ -12,9 +12,9 @@ namespace GoogleMapDownLoader
     {
         readonly ArrayList _waittodownload = new ArrayList();  //مجموعه ای از تصاویر برای دانلود
         string _path=""; //ذخیره مسیر
-        int _thread = 0;  //تعداد تاپیک های دانلود
+        int _thread = 0;  //تعداد رشته های دانلود
         int _downloadnum = 0;  //تعداد تصاویر دانلود شده
-        int _zoom=0;  //سطح زوم
+        int _zoom=0;  //میزان بزرگنمایی
 
         int _totalwidth = 0;  //عرض نقشه پس از ادغام
         int _totalheight = 0;  //ارتفاع نقشه ادغام شده
@@ -48,8 +48,8 @@ namespace GoogleMapDownLoader
             double flat = 0;  //عرض جغرافیایی سمت چپ بالا
             double slng = 0;  //طول جغرافیایی سمت راست پایین
             double slat = 0;  //عرض جغرافیایی پایین سمت راست
-            int zomm = 0;  //سطح زوم
-            int thread = 4;  //تعداد تاپیک های دانلود
+            int zomm = 0;  //میزان بزرگنمایی
+            int thread = 4;  //تعداد رشته های دانلود
             try
             {
                 _path = txtPath.Text;
@@ -91,8 +91,9 @@ namespace GoogleMapDownLoader
                     RectInfo ri = new RectInfo
                     {
                         serverId = serverId,  //دانلود از سرورهای مختلف
-                        threadId = threadId,  //از تاپیک های مختلف دانلود شده
-                        url = BuildURL(serverId),
+                        threadId = threadId,  //از رشته های مختلف دانلود شده
+                        //url = BuildURL(serverId),
+                        url = txtUrl.Text,
                         x = x,
                         y = y,
                         z = zomm,
@@ -100,7 +101,7 @@ namespace GoogleMapDownLoader
                     };
                     _waittodownload.Add(ri);  //هر مربع کوچک را در مجموعه ای که باید دانلود کنید قرار دهید
                     serverId = (serverId + 1) % 4;   //دانلود تصاویر از 4 سرور مختلف
-                    threadId = (threadId + 1) % thread;  //دانلود تصاویر از تاپیک های مختلف
+                    threadId = (threadId + 1) % thread;  //دانلود تصاویر از رشته های مختلف
                 }
             }
 
@@ -118,7 +119,7 @@ namespace GoogleMapDownLoader
                 for (int i = 1; i <= thread; ++i)
                 {
                     Thread t = new Thread(new ParameterizedThreadStart(DownloadThreadProc));
-                    t.Start(i);  //تاپیک دانلود را شروع کنید
+                    t.Start(i);  //اجرای رشته را شروع کنید
                 }
             }
         }
@@ -144,52 +145,9 @@ namespace GoogleMapDownLoader
             }
         }
         #region help methods
+
         /// <summary>
-        /// یک پیشوند برای آدرس دانلود نقشه بر اساس شناسه سرور ایجاد کنید
-        /// </summary>
-        /// <param name="serverId"></param>
-        /// <returns></returns>
-        private string BuildURL(int serverId)
-        {
-            if (radioButton7.Checked)  //مشابه سرورهای خارجی http://mts0.googleapis.com/vt?lyrs=m&x=0&y=0&z=0
-            {
-                string url = "http://mts";
-                url += serverId.ToString();
-                url += ".googleapis.com/vt?lyrs=";
-                if (radioButton1.Checked)  //نقشه راه
-                    url += "m";
-                if (radioButton2.Checked)  //تصویربرداری ماهواره ای
-                    url += "s";
-                if (radioButton3.Checked)  //تصاویر ماهواره ای با برچسب
-                    url += "y";
-                if (radioButton4.Checked)  //نقشه توپوگرافی
-                    url += "t";
-                if (radioButton5.Checked)  //نقشه توپوگرافی با برچسب
-                    url += "p";
-                return url;
-            }
-            if (radioButton6.Checked)  //سرور داخلی مشابه http://mt0.google.cn/vt/lyrs=m@234000000&hl=zh-CN&gl=CN&src=app&x=0&y=0&z=0
-            {
-                string url = "http://mt";
-                url += serverId.ToString();
-                url += ".google.cn/vt/lyrs=";
-                if (radioButton1.Checked)  //نقشه راه
-                    url += "m";
-                if (radioButton2.Checked)  //تصویربرداری ماهواره ای
-                    url += "s";
-                if (radioButton3.Checked)  //تصاویر ماهواره ای با برچسب
-                    url += "y";
-                if (radioButton4.Checked)  //نقشه توپوگرافی
-                    url += "t";
-                if (radioButton5.Checked)  //نقشه توپوگرافی با برچسب
-                    url += "p";
-                url += "@234000000&hl=zh-CN&gl=CN&src=app";
-                return url;
-            }
-            return "";
-        }
-        /// <summary>
-        /// نقشه را با توجه به آدرس اینترنتی دانلود کنید
+        /// دانلود نقشه با توجه براساس آدرس اینترنتی
         /// </summary>
         /// <param name="url"></param>
         /// <returns></returns>
@@ -223,7 +181,7 @@ namespace GoogleMapDownLoader
             return stream;
         }
         /// <summary>
-        /// روش تاپیک دانلود
+        /// اجرای دانلود توسط رشته
         /// </summary>
         /// <param name="param"></param>
         public void DownloadThreadProc(object param)
@@ -241,21 +199,26 @@ namespace GoogleMapDownLoader
                 {
                     try
                     {
-                        string url = ri.url;
-                        //url را با توجه به سطر، ستون، سطح زوم هر تصویر اصلاح کنید
-                        url += "&x=" + ri.x.ToString().Trim();  //فهرست کنید
-                        url += "&y=" + ri.y.ToString().Trim();  //ردیف
-                        url += "&z=" + ri.z.ToString().Trim();  //سطح زوم
+                        string url = ri.url.Replace("{x}", ri.x.ToString()).Replace("{y}", ri.y.ToString()).Replace("{z}", ri.z.ToString());
+
+                        //آدرس را با توجه به طول جغرافیایی، عرض جغرافیایی و میزان بزرگنمایی هر تصویر اصلاح کنید
+                        /*url += "&x=" + ri.x.ToString().Trim();  //طول جغرافیایی
+                        url += "&y=" + ri.y.ToString().Trim();  //عرض جغرافیایی
+                        url += "&z=" + ri.z.ToString().Trim();  //میزان بزرگنمایی*/
                         Bitmap map = DownloadImage(url);
-                        string file = _path + "\\" + ri.z.ToString() + "_" + ri.x.ToString() + "_" + ri.y.ToString() + ".jpg";
-                        ri.Bitmap = map;
-                        //فرمت ذخیره فایل "zoom_column_row.jpg"
-                        map.Save(file, System.Drawing.Imaging.ImageFormat.Jpeg);
-                        Invoke((Action)delegate()  //خروجی
+                        if (map != null)
                         {
-                            rchOuput.SelectionColor = Color.Green;
-                            rchOuput.AppendText(DateTime.Now.ToLongTimeString() + " شماره 1" + threadId + "عکس دانلود شماره تاپیک" + ri.z.ToString() + "_" + ri.x.ToString() + "_" + ri.y.ToString() + ".jpg\r\n");
-                        });
+                            System.IO.Directory.CreateDirectory(_path + "\\" + ri.z.ToString());
+                            string file = _path + "\\" + ri.z.ToString() + "\\" + ri.x.ToString() + "_" + ri.y.ToString() + ".jpg";
+                            ri.Bitmap = map;
+                            //فرمت ذخیره فایل "zoom_column_row.jpg"
+                            map.Save(file, System.Drawing.Imaging.ImageFormat.Jpeg);
+                            Invoke((Action)delegate ()  //خروجی
+                            {
+                                rchOuput.SelectionColor = Color.Green;
+                                rchOuput.AppendText(DateTime.Now.ToLongTimeString() + " شماره 1" + threadId + "عکس دانلود شماره رشته" + ri.z.ToString() + "_" + ri.x.ToString() + "_" + ri.y.ToString() + ".jpg\r\n");
+                            });
+                        }
                         _downloadnum++;
                         ri.bComplete = true;
                     }
@@ -264,7 +227,7 @@ namespace GoogleMapDownLoader
                         Invoke((Action)delegate()  //خروجی
                         {
                             rchOuput.SelectionColor = Color.Red;
-                            rchOuput.AppendText(DateTime.Now.ToLongTimeString() + " شماره 1" + threadId + "عکس دانلود شماره تاپیک" + ri.z.ToString() + "_" + ri.x.ToString() + "_" + ri.y.ToString() + ".jpgمردود شدن！\r\n");
+                            rchOuput.AppendText(DateTime.Now.ToLongTimeString() + " شماره 1" + threadId + "عکس دانلود شماره رشته" + ri.z.ToString() + "_" + ri.x.ToString() + "_" + ri.y.ToString() + ".jpgمردود شدن！\r\n");
                         });
                     }
                 }
@@ -275,7 +238,7 @@ namespace GoogleMapDownLoader
                 rchOuput.AppendText(DateTime.Now.ToLongTimeString() + " شماره 1" + threadId + "اجرای Thread تکمیل شد\r\n");
             });
             _thread--; //تعداد نخ های کارگر را یک بار کاهش دهید
-            if (_thread == 0) //تمام تاپیک ها به پایان می رسد
+            if (_thread == 0) //تمام رشته ها به پایان می رسد
             {
                 Invoke((Action)delegate()  //خروجی
                 {
@@ -289,7 +252,7 @@ namespace GoogleMapDownLoader
         }
 
         /// <summary>
-        /// یک نقطه در سیستم مختصات طول و عرض جغرافیایی را به یک نقطه در یک نقشه دوبعدی مسطح (مبدا در گوشه سمت چپ بالای صفحه است) با توجه به زوم سطح زوم تبدیل کنید.
+        /// یک نقطه در سیستم مختصات طول و عرض جغرافیایی را به یک نقطه در یک نقشه دوبعدی مسطح (مبدا در گوشه سمت چپ بالای صفحه است) با توجه به میزان بزرگنمایی تبدیل کنید.
         /// </summary>
         /// <param name="latitude"></param>
         /// <param name="longitude"></param>
@@ -318,9 +281,9 @@ namespace GoogleMapDownLoader
         public int serverId;  //سرور هدف
         public int threadId;  //موضوع دانلود هدف
         public string url;  //آدرس دانلود
-        public int x;  //فهرست کنید
-        public int y;  //ردیف
-        public int z;  //سطح زوم
+        public int x;  //طول جغرافیایی
+        public int y;  //عرض جغرافیایی
+        public int z;  //میزان بزرگنمایی
         public bool bComplete;  //آیا انجام شده است
         public Bitmap Bitmap; //تصویر
     }

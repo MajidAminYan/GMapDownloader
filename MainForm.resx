@@ -117,4 +117,7 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="txtUrl.Text" xml:space="preserve">
+    <value>https://wxs.ign.fr/choisirgeoportail/geoportail/wmts?REQUEST=GetTile&amp;SERVICE=WMTS&amp;VERSION=1.0.0&amp;STYLE=normal&amp;TILEMATRIXSET=PM&amp;FORMAT=image/jpeg&amp;LAYER=ORTHOIMAGERY.ORTHOPHOTOS&amp;TILEMATRIX={z}&amp;TILEROW={y}&amp;TILECOL={x}</value>
+  </data>
 </root>

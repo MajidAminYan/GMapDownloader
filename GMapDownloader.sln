@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31205.134
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GMapDownloader", "..\GoogleMapDownLoader-master\GMapDownloader.csproj", "{455F4C8F-55AC-4CB5-8C21-B65C75CABBB7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GMapDownloader", "GMapDownloader.csproj", "{455F4C8F-55AC-4CB5-8C21-B65C75CABBB7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
