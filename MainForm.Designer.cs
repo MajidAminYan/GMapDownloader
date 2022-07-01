@@ -92,7 +92,6 @@
             this.txtUrl.Location = new System.Drawing.Point(14, 30);
             this.txtUrl.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.txtUrl.Name = "txtUrl";
-            this.txtUrl.ReadOnly = true;
             this.txtUrl.Size = new System.Drawing.Size(911, 27);
             this.txtUrl.TabIndex = 15;
             this.txtUrl.Text = resources.GetString("txtUrl.Text");
