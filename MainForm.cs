@@ -5,6 +5,7 @@ using System.IO;
 using System.Threading;
 using System.Windows.Forms;
 using System.Net;
+using System.Drawing.Imaging;
 
 namespace GoogleMapDownLoader
 {
@@ -114,7 +115,7 @@ namespace GoogleMapDownLoader
                 BtnStart.Enabled = false;
                 BtnPreview.Enabled = false;
                 rchOuput.Clear();
-                groupBox2.Text = "خروجی(" + _waittodownload.Count + "باز کن)";
+                groupBox2.Text = "خروجی(" + _waittodownload.Count + "مورد)";
                 _startTime = DateTime.Now;
                 for (int i = 1; i <= thread; ++i)
                 {
@@ -124,7 +125,7 @@ namespace GoogleMapDownLoader
             }
         }
         /// <summary>
-        /// نقشه را مرور کنید
+        /// پیش نمایش کلیه نقشه ها
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -137,6 +138,7 @@ namespace GoogleMapDownLoader
                 int startx = ((RectInfo)(_waittodownload[0])).x;
                 int starty = ((RectInfo)(_waittodownload[0])).y;
                 foreach (RectInfo rf in _waittodownload)
+                    if (rf.Bitmap != null)
                     g.DrawImage(rf.Bitmap, new Point((rf.x - startx) * 256, (rf.y - starty) * 256));
                 g.Dispose();
                 b.Save(_path + "\\" + _zoom + "_total.jpg");
@@ -151,13 +153,13 @@ namespace GoogleMapDownLoader
         /// </summary>
         /// <param name="url"></param>
         /// <returns></returns>
-        private Bitmap DownloadImage(string url)
+        private Image DownloadImage(string url)
         {
-            Bitmap bitmap = null;
+            Image result = null;
             Stream stream = DownloadResource(url);
             if (stream != null)
-                bitmap = new Bitmap(stream);
-            return bitmap;
+                result = Image.FromStream(stream);
+            return result;
         }
         /// <summary>
         /// از webclient برای دانلود منابع وب با توجه به url استفاده کنید
@@ -186,7 +188,7 @@ namespace GoogleMapDownLoader
         /// <param name="param"></param>
         public void DownloadThreadProc(object param)
         {
-            int threadId = (int)param;  //شناسه موضوع فعلی
+            int threadId = (int)param;  //شماره رشته فعلی
             Invoke((Action)delegate()  //خروجی
             {
                 rchOuput.SelectionColor = Color.Blue;
@@ -199,20 +201,27 @@ namespace GoogleMapDownLoader
                 {
                     try
                     {
-                        string url = ri.url.Replace("{x}", ri.x.ToString()).Replace("{y}", ri.y.ToString()).Replace("{z}", ri.z.ToString());
-
-                        //آدرس را با توجه به طول جغرافیایی، عرض جغرافیایی و میزان بزرگنمایی هر تصویر اصلاح کنید
-                        /*url += "&x=" + ri.x.ToString().Trim();  //طول جغرافیایی
-                        url += "&y=" + ri.y.ToString().Trim();  //عرض جغرافیایی
-                        url += "&z=" + ri.z.ToString().Trim();  //میزان بزرگنمایی*/
-                        Bitmap map = DownloadImage(url);
+                        string url = ri.url.Replace("${x}", ri.x.ToString()).Replace("${y}", ri.y.ToString()).Replace("${z}", ri.z.ToString()).Replace("{x}", ri.x.ToString()).Replace("{y}", ri.y.ToString()).Replace("{z}", ri.z.ToString());
+                        Image map = DownloadImage(url);
                         if (map != null)
                         {
-                            System.IO.Directory.CreateDirectory(_path + "\\" + ri.z.ToString());
-                            string file = _path + "\\" + ri.z.ToString() + "\\" + ri.x.ToString() + "_" + ri.y.ToString() + ".jpg";
-                            ri.Bitmap = map;
+                            var imgExt = ".jpg";
+                            var imgFormat = ImageFormat.Jpeg;
+                            if (ImageFormat.Png.Equals(map.RawFormat))
+                            {
+                                imgExt = ".png";
+                                imgFormat = ImageFormat.Png;
+                            }
+                            else if (ImageFormat.Gif.Equals(map.RawFormat))
+                            {
+                                imgExt = ".gif";
+                                imgFormat = ImageFormat.Gif;
+                            }
+                            Directory.CreateDirectory(_path + "\\" + ri.z.ToString());
+                            string file = _path + "\\" + ri.z.ToString() + "\\" + ri.x.ToString() + "_" + ri.y.ToString() + imgExt;
+                            ri.Bitmap = (Bitmap)map;
                             //فرمت ذخیره فایل "zoom_column_row.jpg"
-                            map.Save(file, System.Drawing.Imaging.ImageFormat.Jpeg);
+                            map.Save(file, imgFormat);
                             Invoke((Action)delegate ()  //خروجی
                             {
                                 rchOuput.SelectionColor = Color.Green;
@@ -243,7 +252,7 @@ namespace GoogleMapDownLoader
                 Invoke((Action)delegate()  //خروجی
                 {
                     rchOuput.SelectionColor = Color.Blue;
-                    rchOuput.AppendText(DateTime.Now.ToLongTimeString() + " دانلود تصویر تمام شد! مجموع دانلودها" + _downloadnum + "ژانگ، کل زمان" + (DateTime.Now-_startTime).TotalSeconds + "دومین");
+                    rchOuput.AppendText(DateTime.Now.ToLongTimeString() + " دانلود تصویر تمام شد! مجموع دانلودها" + _downloadnum + "، کل زمان" + (DateTime.Now-_startTime).TotalSeconds + "دومین");
                     groupBox1.Enabled = true;
                     BtnStart.Enabled = true;
                     BtnPreview.Enabled = true;
@@ -278,8 +287,8 @@ namespace GoogleMapDownLoader
     /// </summary>
     public class RectInfo
     {
-        public int serverId;  //سرور هدف
-        public int threadId;  //موضوع دانلود هدف
+        public int serverId;  //سرور
+        public int threadId;  //شماره رشته
         public string url;  //آدرس دانلود
         public int x;  //طول جغرافیایی
         public int y;  //عرض جغرافیایی
